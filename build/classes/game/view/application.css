@@ -1,0 +1,17 @@
+/* @author Walmick Diogenes*/
+
+#board-grid {
+	-fx-background-image: url(file:res/textures/merel_background.png);
+}
+
+#left-tile-grid > .image-view {
+	-fx-image: url(file:res/textures/black_tile.png);
+}
+
+#right-tile-grid > .image-view {
+	-fx-image: url(file:res/textures/white_tile.png);
+}
+
+#bg {
+	-fx-background-image: url(file:res/textures/bg.png);
+}

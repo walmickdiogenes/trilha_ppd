@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0" xmlns:jfx="http://javafx.com" href="trilha_no_socket_v1.jnlp">
+  <information>
+    <title>trilha_no_socket_v1</title>
+    <vendor>walmi</vendor>
+    <description>null</description>
+    <offline-allowed/>
+  </information>
+  <resources>
+    <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
+    <jar href="trilha_no_socket_v1.jar" size="34948" download="eager" />
+  </resources>
+  <jfx:javafx-desc  width="800" height="600" main-class="game.GameTrilha"  name="trilha_no_socket_v1" />
+  <update check="always"/>
+</jnlp>
