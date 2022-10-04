@@ -1,12 +1,12 @@
 package game;
 
+import game.model.Envelope;
 import game.model.Mensagem.Action;
 import game.model.Mensagem;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -28,25 +28,34 @@ public class ThreadServidor extends Thread {
             while (!sair) {
                 //Entrada: recebendo mensagem do Cliente
                 ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream());
-                Mensagem mensagem = (Mensagem) entrada.readObject();//Recebendo mensagem do Cliente
-                Action action = mensagem.getAction();
+                Envelope envelope = (Envelope) entrada.readObject();
 
-                switch (action) {
-                    case CONNECT:
-                        conectar(mensagem);
-                        enviarMensagemTodos(mensagem);
-                        break;
-                    case DISCONNECT:
-                        desconectar(mensagem);
-                        enviarMensagemTodos(mensagem);
-                        sair = true;
-                        break;
-                    case SEND:
-                        enviarMensagemTodos(mensagem);
-                        break;                                             
-                    default:
-                        break;
+                if (envelope.tipo() == Envelope.Tipo.Mensagem) {
+                    Mensagem mensagem = (Mensagem) envelope.conteudo();//Recebendo mensagem do Cliente
+                    Action action = mensagem.getAction();
+
+                    switch (action) {
+                        case CONNECT:
+                            conectar(mensagem);
+                            enviarParaTodos(mensagem, envelope.tipo());
+                            break;
+                        case DISCONNECT:
+                            desconectar(mensagem);
+                            enviarParaTodos(mensagem, envelope.tipo());
+                            sair = true;
+                            break;
+                        case SEND:
+                            enviarParaTodos(mensagem, envelope.tipo());
+                            break;
+                        default:
+                            break;
+                    }
                 }
+
+                if (envelope.tipo() == Envelope.Tipo.Jogada) {
+                    enviarParaTodos(envelope.conteudo(), envelope.tipo());
+                }
+
             }
         } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(ThreadServidor.class.getName()).log(Level.SEVERE, null, ex);
@@ -61,10 +70,10 @@ public class ThreadServidor extends Thread {
         clientesMap.remove(mensagem.getRemetente());
     }
 
-    public void enviarMensagemTodos(Mensagem mensagem) throws IOException {
+    public void enviarParaTodos(Object mensagem, Envelope.Tipo tipo) throws IOException {
         for (Map.Entry<String, Socket> cliente : clientesMap.entrySet()) {
             ObjectOutputStream saida = new ObjectOutputStream(cliente.getValue().getOutputStream());
-            saida.writeObject(mensagem);
+            saida.writeObject(new Envelope(tipo, mensagem));
         }
     }
     

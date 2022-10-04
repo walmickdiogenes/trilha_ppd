@@ -2,10 +2,12 @@ package game.model;
 
 import game.util.Cor;
 
+import java.io.Serializable;
+
 /*
  * @author Walmick Diogenes
  */
-public class Jogador {
+public class Jogador implements Serializable {
 
 	private String nome;
 	private Cor cor;

@@ -1,9 +1,11 @@
 package game.model;
 
+import java.io.Serializable;
+
 /*
  * @author Walmick Diogenes
  */
-public class Location {
+public class Location implements Serializable {
 
 	private final int x;
 	private final int y;

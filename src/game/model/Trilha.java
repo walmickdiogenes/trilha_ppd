@@ -1,5 +1,6 @@
 package game.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +9,7 @@ import game.util.Cor;
 /*
  * @author Walmick Diogenes
  */
-public class Trilha {
+public class Trilha implements Serializable {
 
 	private List<Location> existeTrilha;
 

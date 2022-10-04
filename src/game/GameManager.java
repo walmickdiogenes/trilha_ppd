@@ -1,5 +1,6 @@
 package game;
 
+import java.io.Serializable;
 import java.util.List;
 
 import game.model.Tabuleiro;
@@ -11,14 +12,14 @@ import game.util.TrilhaFase;
 /*
  * @author Walmick Diogenes
  */
-public class GameManager {
+public class GameManager implements Serializable {
 
 	private Jogador jogador;
 	private Jogador outroJogador;
 	private Jogador jogador1;
 	private Jogador jogador2;
 
-	private Tabuleiro tabuleiro;
+	public Tabuleiro tabuleiro;
 
 	private TrilhaFase gamePhase;
 
@@ -90,7 +91,7 @@ public class GameManager {
 			gamePhase = TrilhaFase.MOVER;
 		}
 		if (tabuleiro.getQtdPedrasColocadasTabuleiro() >= 5) {
-			if (tabuleiro.verificiaTrilha(location)) {
+			if (tabuleiro.verificaTrilha(location)) {
 				tabuleiro.setDefinirTrilha(true);
 			}
 		}

@@ -9,9 +9,17 @@ public class Mensagem implements Serializable {
     private String remetente;
     private String destinatario;
     private String texto;
-    private ArrayList<String> usuariosOnline;
+    public static ArrayList<String> jogadoresOnline;
 
     private Action action;
+    
+    public ArrayList<String> getjogadoresOnline() {
+        return jogadoresOnline;
+    }
+
+    public void setjogadoresOnline(ArrayList<String> jogadoresOnline) {
+        this.jogadoresOnline = jogadoresOnline;
+    }
 
     public String getRemetente() {
         return remetente;
@@ -45,15 +53,7 @@ public class Mensagem implements Serializable {
         this.destinatario = destinatario;
     }
     
-    public ArrayList<String> getUsuariosOnline() {
-        return usuariosOnline;
-    }
-
-    public void setUsuariosOnline(ArrayList<String> usuariosOnline) {
-        this.usuariosOnline = usuariosOnline;
-    }
-
     public enum Action {
-        CONNECT, DISCONNECT, SEND, USERS_ONLINE
+        CONNECT, DISCONNECT, SEND
     }
 }

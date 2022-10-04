@@ -1,5 +1,7 @@
 package game;
 
+import game.controller.RootLayoutController;
+import game.model.Envelope;
 import game.model.Mensagem;
 import game.model.Mensagem.Action;
 import java.io.IOException;
@@ -14,13 +16,15 @@ public class ThreadCliente extends Thread {
 
     private final Socket socket;
     private final TextArea textArea;
+    private final RootLayoutController rootLayoutController;
     private final String remetente;
     boolean sair = false;
 
-    public ThreadCliente(String r, Socket s, TextArea textArea) {
+    public ThreadCliente(String r, Socket s, TextArea textArea, RootLayoutController rootLayoutController) {
         this.remetente = r;
         this.socket = s;
         this.textArea = textArea;
+        this.rootLayoutController = rootLayoutController;
     }
 
     @Override
@@ -28,22 +32,33 @@ public class ThreadCliente extends Thread {
         try {
             while (!sair) {
                 ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream());
-                Mensagem mensagem = (Mensagem) entrada.readObject();
-                Action action = mensagem.getAction();
+                Envelope envelope = (Envelope) entrada.readObject();
 
-                switch (action) {
-                    case CONNECT:
-                        conectar(mensagem);
-                        break;
-                    case DISCONNECT:
-                        desconectar(mensagem);
-                        break;
-                    case SEND:
-                        receberMensagem(mensagem);
-                        break;
-                    default:
-                        break;
+                if (envelope.tipo() == Envelope.Tipo.Mensagem) {
+                    Mensagem mensagem = (Mensagem) envelope.conteudo();
+
+                    Action action = mensagem.getAction();
+
+                    switch (action) {
+                        case CONNECT:
+                            conectar(mensagem);
+                            break;
+                        case DISCONNECT:
+                            desconectar(mensagem);
+                            break;
+                        case SEND:
+                            receberMensagem(mensagem);
+                            break;
+                        default:
+                            break;
+                    }
                 }
+
+                if (envelope.tipo() == Envelope.Tipo.Jogada) {
+                    var gm = (GameManager) envelope.conteudo();
+                    rootLayoutController.setGameManager(gm);
+                }
+
             }
         } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(ThreadServidor.class.getName()).log(Level.SEVERE, null, ex);

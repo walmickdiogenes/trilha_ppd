@@ -1,5 +1,6 @@
 package game.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,14 +17,14 @@ import javafx.beans.property.SimpleObjectProperty;
 /*
  * @author Walmick Diogenes
  */
-public class Tabuleiro {
+public class Tabuleiro implements Serializable {
 
 	private static Tabuleiro instance = new Tabuleiro();
 
-	private BooleanProperty novoJogo;
-	private BooleanProperty jogoGanho;
-	private BooleanProperty definirTrilha; 
-	private ObjectProperty<Location> localizacaoPedraColocada;
+	private boolean novoJogo;
+	private boolean jogoGanho;
+	private boolean definirTrilha;
+	private Location localizacaoPedraColocada;
 
 	private Map<Location, Cor> gridJogo;
 
@@ -62,11 +63,6 @@ public class Tabuleiro {
 	private Location l66 = new Location(6, 6);
 
 	private Tabuleiro() {
-		novoJogo = new SimpleBooleanProperty();
-		jogoGanho = new SimpleBooleanProperty();
-		definirTrilha = new SimpleBooleanProperty();
-		localizacaoPedraColocada = new SimpleObjectProperty<>();
-
 		gridJogo = new HashMap<>();
 		trilha = new Trilha();
 		localizacoesPermitidas = new ArrayList<>();
@@ -99,52 +95,44 @@ public class Tabuleiro {
 		trilha.clear();
 	}
 
-	public final BooleanProperty novoJogoProperty() {
-		return this.novoJogo;
-	}
-
-	public final boolean isNovoJogo() {
-		return this.novoJogoProperty().get();
-	}
+	public transient BooleanProperty novoJogoProperty = new SimpleBooleanProperty();
 
 	public final void setNovoJogo(final boolean novoJogo) {
-		this.novoJogoProperty().set(novoJogo);
+		this.novoJogo = novoJogo;
+		this.novoJogoProperty.set(novoJogo);
 	}
 
-	public final BooleanProperty jogoGanhoProperty() {
+	public transient BooleanProperty jogoGanhoProperty = new SimpleBooleanProperty();
+
+	public final boolean isJogoGanho() {
 		return this.jogoGanho;
 	}
 
-	public final boolean isJogoGanho() {
-		return this.jogoGanhoProperty().get();
-	}
-
 	public final void setJogoGanho(final boolean jogoGanho) {
-		this.jogoGanhoProperty().set(jogoGanho);
+		this.jogoGanho = jogoGanho;
+		this.jogoGanhoProperty.set(jogoGanho);
 	}
 
-	public final ObjectProperty<Location> localizacaoPedraColocadaProperty() {
+	public transient ObjectProperty<Location> localizacaoPedraColocadaProperty = new SimpleObjectProperty<Location>();
+
+	public final Location getLocalizacaoPedraColocada() {
 		return this.localizacaoPedraColocada;
 	}
 
-	public final Location getLocalizacaoPedraColocada() {
-		return this.localizacaoPedraColocadaProperty().get();
-	}
-
 	public final void setLocalizacaoPedraColocada(final Location localizacaoPedraColocada) {
-		this.localizacaoPedraColocadaProperty().set(localizacaoPedraColocada);
+		this.localizacaoPedraColocada = localizacaoPedraColocada;
+		this.localizacaoPedraColocadaProperty.set(localizacaoPedraColocada);
 	}
 
-	public final BooleanProperty definirTrilhaProperty() {
+	public transient BooleanProperty definirTrilhaProperty = new SimpleBooleanProperty();
+
+	public final boolean isDefinirTrilha() {
 		return this.definirTrilha;
 	}
 
-	public final boolean isDefinirTrilha() {
-		return this.definirTrilhaProperty().get();
-	}
-
 	public final void setDefinirTrilha(final boolean definirTrilha) {
-		this.definirTrilhaProperty().set(definirTrilha);
+		this.definirTrilha = definirTrilha;
+		this.definirTrilhaProperty.set(definirTrilha);
 	}
 
 	public Map<Location, Cor> getGridJogo() {
@@ -373,7 +361,7 @@ public class Tabuleiro {
 	 *            local recém-definido
 	 * @return true se merel foi definido, false caso contrário
 	 */
-	public boolean verificiaTrilha(Location location) {
+	public boolean verificaTrilha(Location location) {
 		if (location.equals(l00)) {
 			return verificaLocalizacao(l00, l30, l60, l00, l03, l06);
 		} else if (location.equals(l30)) {

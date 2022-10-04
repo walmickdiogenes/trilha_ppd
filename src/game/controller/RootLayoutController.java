@@ -3,7 +3,9 @@ package game.controller;
 import game.GameManager;
 import game.GameTrilha;
 import game.ThreadCliente;
+import game.model.Envelope;
 import game.model.Tabuleiro;
+import game.model.Trilha;
 import game.model.Location;
 import game.model.Mensagem;
 import game.util.Cor;
@@ -11,6 +13,7 @@ import game.util.TrilhaFase;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -45,6 +48,7 @@ public class RootLayoutController {
 	private GameManager gameManager;
         private Socket socket;
         private String remetente;
+        private ArrayList<String> jogadoresOnline;
 
 	private ObservableList<ImageView> gridTabuleiroChildren = FXCollections.observableArrayList();
 
@@ -83,12 +87,12 @@ public class RootLayoutController {
                 mensagem.setTexto("Entrou no Jogo!");
                 mensagem.setAction(Mensagem.Action.CONNECT);
 
-                ThreadCliente thread = new ThreadCliente(remetente, socket, textAreaHistorico);
+                ThreadCliente thread = new ThreadCliente(remetente, socket, textAreaHistorico, this);
                 thread.setName("Thread Cliente " + remetente);
                 thread.start();
 
                 //Saída de Dados do Cliente
-                saida.writeObject(mensagem); //Enviando mensagem para Servidor
+                saida.writeObject(new Envelope(Envelope.Tipo.Mensagem, mensagem)); //Enviando mensagem para Servidor
 
                 } catch (IOException ex) {
                     Logger.getLogger(RootLayoutController.class.getName()).log(Level.SEVERE, null, ex);
@@ -117,7 +121,7 @@ public class RootLayoutController {
 
                 //Saída de Dados do Cliente
                 ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream());
-                saida.writeObject(mensagem); //Enviando mensagem para Servidor
+                saida.writeObject(new Envelope(Envelope.Tipo.Mensagem, mensagem)); //Enviando mensagem para Servidor
 
                 this.textMensagem.setText("");
 
@@ -125,6 +129,19 @@ public class RootLayoutController {
                 Logger.getLogger(RootLayoutController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
+	public void enviarJogada(GameManager gameManager) {
+		try {
+			//Saída de Dados do Cliente
+			ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream());
+			saida.writeObject(new Envelope(Envelope.Tipo.Jogada, gameManager)); //Enviando mensagem para Servidor
+			
+			this.textMensagem.setText("");
+
+		} catch (IOException ex) {
+			Logger.getLogger(RootLayoutController.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
         
         /*
 	 * Abre uma caixa de diálogo antes de fechar o jogo e sinaliza para o oponente via chat.
@@ -139,7 +156,7 @@ public class RootLayoutController {
 
                 //Saída de Dados do Cliente
                 ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream());
-                saida.writeObject(mensagem); //Enviando mensagem para Servidor
+                saida.writeObject(new Envelope(Envelope.Tipo.Mensagem, mensagem)); //Enviando mensagem para Servidor
 
             } catch (IOException ex) {
                 Logger.getLogger(RootLayoutController.class.getName()).log(Level.SEVERE, null, ex);
@@ -175,6 +192,7 @@ public class RootLayoutController {
 	 */
 	public void setGameManager(GameManager gameManager) {
 		this.gameManager = gameManager;
+		this.atualizarTodasAsPedras();
 	}
         
 	/*
@@ -274,6 +292,24 @@ public class RootLayoutController {
 		}
 	}
 
+	private void atualizarTodasAsPedras() {
+		var gridJogo = gameManager.tabuleiro.getGridJogo();
+		for (ImageView iv : gridTabuleiroChildren) {
+			Location location = getLocalizacaoPedra(iv);
+			if (gridJogo.containsKey(location)) {
+				var color = gridJogo.get(location);
+
+				if (color == Cor.PRETA) {
+					iv.setImage(new Image("file:res/textures/black_tile.png"));
+					iv.setId("blk");
+				} else if (color == Cor.BRANCA) {
+					iv.setImage(new Image("file:res/textures/white_tile.png"));
+					iv.setId("wht");
+				}
+			}
+		}
+	}
+
 	/*
 	 * Se uma pedra for removida depois que uma trilha definida, a imagem padrão será carregada novamente.
 	 * 
@@ -335,26 +371,27 @@ public class RootLayoutController {
 	 * Define os Listeners para as Propriedades {@code Tabuleiro} da classe .
 	 */
 	private void initTabuleiroPropertyListeners() {
-		tabuleiro.novoJogoProperty().addListener((observableValue, oldValue, newValue) -> {
+		tabuleiro.novoJogoProperty.addListener((observableValue, oldValue, newValue) -> {
 			if (newValue) {
 				gameManager.startTrilha();
 			}
 		});
-		tabuleiro.definirTrilhaProperty().addListener((observableValue, oldValue, newValue) -> {
+		tabuleiro.definirTrilhaProperty.addListener((observableValue, oldValue, newValue) -> {
 			if (newValue) {
 				trocarImagemPedrasRemoviveis(gameManager.getCorOutroJogador());
 			} else {
 				rstImagemPedraRemovida(gameManager.getCorJogadorAtual());
 			}
 		});
-		tabuleiro.jogoGanhoProperty().addListener((observableValue, oldValue, newValue) -> {
+		tabuleiro.jogoGanhoProperty.addListener((observableValue, oldValue, newValue) -> {
 			if (newValue) {
 				mostraVencedorDialogo();
 			}
 		});
-		tabuleiro.localizacaoPedraColocadaProperty().addListener((observableValue, oldValue, newValue) -> {
+		tabuleiro.localizacaoPedraColocadaProperty.addListener((observableValue, oldValue, newValue) -> {
 			if (newValue != null) {
 				gameManager.colocarPedra(newValue);
+				enviarJogada(gameManager);
 			}
 		});
 	}
