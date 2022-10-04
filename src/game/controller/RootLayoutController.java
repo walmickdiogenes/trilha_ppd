@@ -1,8 +1,8 @@
 package game.controller;
 
-import game.GameManager;
-import game.GameTrilha;
-import game.ThreadCliente;
+import game.main.GameManager;
+import game.main.GameTrilha;
+import game.main.ThreadCliente;
 import game.model.Envelope;
 import game.model.Tabuleiro;
 import game.model.Trilha;
