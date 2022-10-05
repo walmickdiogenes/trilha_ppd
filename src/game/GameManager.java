@@ -1,4 +1,4 @@
-package game.main;
+package game;
 
 import java.io.Serializable;
 import java.util.List;

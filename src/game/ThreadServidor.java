@@ -1,53 +1,51 @@
-package game.main;
+package game;
 
-import game.controller.RootLayoutController;
 import game.model.Envelope;
-import game.model.Mensagem;
 import game.model.Mensagem.Action;
+import game.model.Mensagem;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.application.Platform;
-import javafx.scene.control.TextArea;
 
-public class ThreadCliente extends Thread {
+public class ThreadServidor extends Thread {
 
-    private final Socket socket;
-    private final TextArea textArea;
-    private final RootLayoutController rootLayoutController;
-    private final String remetente;
-    boolean sair = false;
+    private static Map<String, Socket> clientesMap = new HashMap<>();
+    private Socket socket;
 
-    public ThreadCliente(String r, Socket s, TextArea textArea, RootLayoutController rootLayoutController) {
-        this.remetente = r;
+    public ThreadServidor(Socket s) {
         this.socket = s;
-        this.textArea = textArea;
-        this.rootLayoutController = rootLayoutController;
     }
 
     @Override
     public void run() {
+        boolean sair = false;
         try {
             while (!sair) {
+                //Entrada: recebendo mensagem do Cliente
                 ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream());
                 Envelope envelope = (Envelope) entrada.readObject();
 
                 if (envelope.tipo() == Envelope.Tipo.Mensagem) {
-                    Mensagem mensagem = (Mensagem) envelope.conteudo();
-
+                    Mensagem mensagem = (Mensagem) envelope.conteudo();//Recebendo mensagem do Cliente
                     Action action = mensagem.getAction();
 
                     switch (action) {
                         case CONNECT:
                             conectar(mensagem);
+                            enviarParaTodos(mensagem, envelope.tipo());
                             break;
                         case DISCONNECT:
                             desconectar(mensagem);
+                            enviarParaTodos(mensagem, envelope.tipo());
+                            sair = true;
                             break;
                         case SEND:
-                            receberMensagem(mensagem);
+                            enviarParaTodos(mensagem, envelope.tipo());
                             break;
                         default:
                             break;
@@ -55,8 +53,7 @@ public class ThreadCliente extends Thread {
                 }
 
                 if (envelope.tipo() == Envelope.Tipo.Jogada) {
-                    var gm = (GameManager) envelope.conteudo();
-                    rootLayoutController.setGameManager(gm);
+                    enviarParaTodos(envelope.conteudo(), envelope.tipo());
                 }
 
             }
@@ -66,19 +63,19 @@ public class ThreadCliente extends Thread {
     }
 
     public void conectar(Mensagem mensagem) {
-        Platform.runLater(() -> this.textArea.appendText(mensagem.getRemetente() + " >> " + mensagem.getTexto() + "\n"));
+        clientesMap.put(mensagem.getRemetente(), socket);
     }
 
     public void desconectar(Mensagem mensagem) throws IOException {
-        Platform.runLater(() -> this.textArea.appendText(mensagem.getRemetente() + " >> " + mensagem.getTexto() + "\n"));
+        clientesMap.remove(mensagem.getRemetente());
+    }
 
-        if (mensagem.getRemetente().equals(this.remetente)) {
-            this.socket.close();
-            this.sair = true;
+    public void enviarParaTodos(Object mensagem, Envelope.Tipo tipo) throws IOException {
+        for (Map.Entry<String, Socket> cliente : clientesMap.entrySet()) {
+            ObjectOutputStream saida = new ObjectOutputStream(cliente.getValue().getOutputStream());
+            saida.writeObject(new Envelope(tipo, mensagem));
         }
     }
-
-    public void receberMensagem(Mensagem mensagem) throws IOException {
-        Platform.runLater(() -> this.textArea.appendText(mensagem.getRemetente() + " >> " + mensagem.getTexto() + "\n"));
-    }
+    
+    
 }
